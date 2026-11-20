@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Expand, Layers, MapPin, Route } from "lucide-react";
 import type { Airport, Flight } from "../data/network";
 
@@ -23,23 +23,29 @@ function project(airport: Airport) {
 }
 
 export function FlightNetwork({ airports, flights, selectedAirport }: FlightNetworkProps) {
+  const [routesVisible, setRoutesVisible] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const airportById = useMemo(() => new Map(airports.map((airport) => [airport.id, airport])), [airports]);
   const airportPoints = useMemo(() => new Map(airports.map((airport) => [airport.id, project(airport)])), [airports]);
 
   return (
     <section className="panel network-panel" id="network">
       <div className="panel-heading network-heading">
-        <div className="panel-title-group"><div className="panel-icon map-icon"><MapPin size={17} /></div><div><h2>Flight network</h2><p>Live route overview across India</p></div></div>
-        <div className="map-actions"><span className="map-leg-legend"><i /> Active routes</span><button className="small-icon-button" aria-label="Map layers"><Layers size={15} /></button><button className="small-icon-button" aria-label="Expand network"><Expand size={15} /></button></div>
+        <div className="panel-title-group"><div className="panel-icon map-icon"><MapPin size={17} /></div><div><h2>Flight network</h2><p>Scheduled routes from the supplied network</p></div></div>
+        <div className="map-actions">
+          <span className="map-leg-legend"><i /> {routesVisible ? "Active routes" : "Routes hidden"}</span>
+          <button className="small-icon-button" aria-label={routesVisible ? "Hide routes" : "Show routes"} aria-pressed={routesVisible} onClick={() => setRoutesVisible(!routesVisible)}><Layers size={15} /></button>
+          <button className="small-icon-button" aria-label={expanded ? "Collapse network map" : "Expand network map"} aria-pressed={expanded} onClick={() => setExpanded(!expanded)}><Expand size={15} /></button>
+        </div>
       </div>
-      <div className="map-wrap">
+      <div className={`map-wrap ${expanded ? "map-expanded" : ""}`}>
         <div className="map-grid" />
         <svg className="network-svg" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} role="img" aria-label="Flight routes between airports in India">
           <defs>
             <pattern id="mapDots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.7" fill="#dbe2ea" /></pattern>
           </defs>
           <rect width={MAP_WIDTH} height={MAP_HEIGHT} fill="url(#mapDots)" />
-          {flights.map((flight) => {
+          {routesVisible && flights.map((flight) => {
             const origin = airportPoints.get(flight.origin);
             const destination = airportPoints.get(flight.destination);
             if (!origin || !destination) return null;

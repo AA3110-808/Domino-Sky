@@ -7,16 +7,20 @@ type ClosureSimulatorProps = {
   airports: Airport[];
   scenario: ClosureScenario;
   applied: boolean;
+  loading: boolean;
   onScenarioChange: (scenario: Partial<ClosureScenario>) => void;
   onApply: () => void;
+  onReset: () => void;
 };
 
 export function ClosureSimulator({
   airports,
   scenario,
   applied,
+  loading,
   onScenarioChange,
   onApply,
+  onReset,
 }: ClosureSimulatorProps) {
   const [expanded, setExpanded] = useState(true);
 
@@ -27,7 +31,10 @@ export function ClosureSimulator({
           <div className="panel-icon warning-icon"><AlertTriangle size={17} /></div>
           <div><h2 id="closure-title">Airport closure scenario</h2><p>Configure a disruption to explore network impact</p></div>
         </div>
-        <div className="preview-pill"><span /> SIMULATION PREVIEW</div>
+        <div className="closure-heading-actions">
+          <div className="preview-pill"><span /> DETERMINISTIC ENGINE</div>
+          <button className="collapse-scenario" onClick={() => setExpanded(!expanded)} aria-label={expanded ? "Collapse scenario controls" : "Expand scenario controls"}>{expanded ? "−" : "+"}</button>
+        </div>
       </div>
       {expanded && (
         <>
@@ -48,17 +55,15 @@ export function ClosureSimulator({
                 {[30, 60, 90, 120, 180].map((minutes) => <option key={minutes} value={minutes}>{minutes < 60 ? `${minutes} min` : `${minutes / 60} hr${minutes > 60 ? "s" : ""}`}</option>)}
               </select>
             </label>
-            <button className="apply-button" onClick={onApply}>{applied ? "Inputs captured" : "Apply scenario"} <ArrowRight size={15} /></button>
+            <button className="apply-button" onClick={onApply} disabled={loading}>{loading ? "Simulating…" : applied ? "Run again" : "Run simulation"} <ArrowRight size={15} /></button>
           </div>
           <div className="closure-foot">
-            <span className="closure-note"><span className="note-dot" /> Inputs are for UI development; recovery calculations are not connected.</span>
-            <button className="reset-button" onClick={() => onScenarioChange({ airportId: "BOM", startTime: "10:30", durationMinutes: 90 })}><RotateCcw size={12} /> Reset</button>
+            <span className="closure-note"><span className="note-dot" /> Outputs use the supplied schedule and dataset constraints.</span>
+            <button className="reset-button" onClick={onReset} disabled={loading}><RotateCcw size={12} /> Reset</button>
           </div>
-          {applied && <div className="scenario-feedback" role="status">Scenario inputs captured. No delay, passenger, or recovery results have been calculated.</div>}
+          {applied && <div className="scenario-feedback" role="status">Simulation complete. Flight, connection, rotation, and crew panels show deterministic engine output.</div>}
         </>
       )}
-      {!expanded && <button className="expand-scenario" onClick={() => setExpanded(true)}>Show scenario controls <ArrowRight size={14} /></button>}
-      <button className="collapse-scenario" onClick={() => setExpanded(!expanded)} aria-label={expanded ? "Collapse scenario controls" : "Expand scenario controls"}>{expanded ? "−" : "+"}</button>
     </section>
   );
 }

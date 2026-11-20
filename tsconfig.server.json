@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": ".",
+    "outDir": "dist-server",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "server/index.ts",
+    "server/app.ts",
+    "server/schemas.ts",
+    "server/dataset.ts",
+    "server/ai/dispatcher.ts",
+    "src/simulation/contract.ts",
+    "src/simulation/engine.ts"
+  ],
+  "exclude": ["node_modules", "dist", "dist-server"]
+}
