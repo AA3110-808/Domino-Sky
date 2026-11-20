@@ -24,8 +24,8 @@ export async function postJson<T>(path: string, body: unknown): Promise<T> {
   return payload as T;
 }
 
-export async function getApiHealth(): Promise<{ status: string; simulationEngine: string; aiConfigured: boolean }> {
+export async function getApiHealth(): Promise<{ status: string; simulationEngine: string; aiConfigured: boolean; geminiConfigured: boolean }> {
   const response = await fetch("/api/health");
   if (!response.ok) throw new ApiError(`API health check failed with status ${response.status}.`, response.status);
-  return await response.json() as { status: string; simulationEngine: string; aiConfigured: boolean };
+  return await response.json() as { status: string; simulationEngine: string; aiConfigured: boolean; geminiConfigured: boolean };
 }

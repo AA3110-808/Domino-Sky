@@ -106,10 +106,12 @@ export function createApp(config: ServerConfig) {
   app.use(express.json({ limit: "256kb" }));
 
   app.get("/api/health", (_request, response) => {
+    const geminiConfigured = Boolean(config.ai.apiKey && config.ai.apiUrl && config.ai.model);
     response.json({
       status: "ok",
       simulationEngine: "available",
-      aiConfigured: Boolean(config.ai.apiKey && config.ai.apiUrl && config.ai.model),
+      aiConfigured: geminiConfigured,
+      geminiConfigured,
     });
   });
 
@@ -160,11 +162,17 @@ export function createApp(config: ServerConfig) {
         throw new HttpError("Current recovery actions are infeasible.", 422, result.infeasibleActions);
       }
       if (!config.ai.apiKey || !config.ai.apiUrl || !config.ai.model) {
-        throw new HttpError("AI dispatcher is not configured. The simulation engine remains available.", 503);
+        throw new HttpError("Gemini dispatcher is not configured. The simulation engine remains available.", 503);
       }
       response.json(await analyzeWithAI(result, simulationRequest, operationalDataset, config.ai));
     } catch (error) {
-      next(error instanceof HttpError ? error : new HttpError(error instanceof Error ? error.message : "AI provider failed.", 502));
+      if (error instanceof HttpError) {
+        next(error);
+        return;
+      }
+      const message = error instanceof Error ? error.message : "AI provider failed.";
+      const safeMessage = config.ai.apiKey ? message.replaceAll(config.ai.apiKey, "[redacted]") : message;
+      next(new HttpError(safeMessage, 502));
     }
   });
 

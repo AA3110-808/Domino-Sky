@@ -159,7 +159,7 @@ export function DispatcherPanel({ aiConfigured, loading, response, error, onAnal
         <div className="ai-message-icon"><WandSparkles size={16} /></div>
         <div>
           <strong>{response ? "Engine-backed operational summary" : aiConfigured === false ? "AI provider is not configured." : "Recommendations require simulation results."}</strong>
-          <p>{response?.summary ?? (aiConfigured === false ? "Set AI_API_KEY, AI_API_URL, and AI_MODEL on the backend to enable analysis. The deterministic simulator works without AI." : "The AI can explain verified output. All operational figures come from the deterministic engine.")}</p>
+          <p>{response?.summary ?? (aiConfigured === false ? "Set GEMINI_API_KEY and GEMINI_MODEL on the backend to enable analysis. The deterministic simulator works without AI." : "The AI can explain verified output. All operational figures come from the deterministic engine.")}</p>
         </div>
       </div>
       {response?.explanations.map((explanation, index) => <p className="dispatcher-explanation" key={`${index}-${explanation}`}>{explanation}</p>)}

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { createApp } from "./app.js";
@@ -29,7 +29,78 @@ describe("simulation API", () => {
       status: "ok",
       simulationEngine: "available",
       aiConfigured: false,
+      geminiConfigured: false,
     });
+  });
+
+  it("reports Gemini configuration without returning credentials", async () => {
+    const apiKey = "test-gemini-key";
+    const configuredApp = createApp({
+      corsOrigins: [],
+      ai: {
+        apiKey,
+        apiUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        model: "test-model",
+      },
+    });
+    const configuredServer = configuredApp.listen(0, "127.0.0.1");
+    await new Promise<void>((resolve, reject) => {
+      configuredServer.once("listening", resolve);
+      configuredServer.once("error", reject);
+    });
+    const address = configuredServer.address() as AddressInfo;
+    try {
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/health`);
+      const health = await response.json();
+      expect(health).toEqual({
+        status: "ok",
+        simulationEngine: "available",
+        aiConfigured: true,
+        geminiConfigured: true,
+      });
+      expect(JSON.stringify(health)).not.toContain(apiKey);
+    } finally {
+      await new Promise<void>((resolve, reject) => configuredServer.close((error) => error ? reject(error) : resolve()));
+    }
+  });
+
+  it("redacts credentials from Gemini provider errors", async () => {
+    const apiKey = "test-gemini-key";
+    const configuredApp = createApp({
+      corsOrigins: [],
+      ai: {
+        apiKey,
+        apiUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        model: "test-model",
+      },
+    });
+    const configuredServer = configuredApp.listen(0, "127.0.0.1");
+    await new Promise<void>((resolve, reject) => {
+      configuredServer.once("listening", resolve);
+      configuredServer.once("error", reject);
+    });
+    const address = configuredServer.address() as AddressInfo;
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+    const nativeFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (...args: Parameters<typeof fetch>) => {
+      if (String(args[0]).startsWith(baseUrl)) return nativeFetch(...args);
+      throw new Error(`Provider rejected request with credential ${apiKey}.`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const response = await fetchMock(`${baseUrl}/api/dispatcher/analyze`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ airportId: "BOM", startTime: "10:30", durationMinutes: 90 }),
+      });
+      const payload = await response.json();
+      expect(response.status).toBe(502);
+      expect(payload.error).toContain("[redacted]");
+      expect(payload.error).not.toContain(apiKey);
+    } finally {
+      vi.unstubAllGlobals();
+      await new Promise<void>((resolve, reject) => configuredServer.close((error) => error ? reject(error) : resolve()));
+    }
   });
 
   it("runs a validated scenario against the supplied network", async () => {

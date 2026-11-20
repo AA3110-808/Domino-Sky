@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
 
+const geminiChatCompletionsUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 const port = Number(process.env.PORT ?? 3001);
 const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:5173,http://127.0.0.1:5173")
   .split(",")
@@ -14,9 +15,9 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 const app = createApp({
   corsOrigins,
   ai: {
-    apiKey: process.env.AI_API_KEY,
-    apiUrl: process.env.AI_API_URL,
-    model: process.env.AI_MODEL,
+    apiKey: process.env.GEMINI_API_KEY,
+    apiUrl: geminiChatCompletionsUrl,
+    model: process.env.GEMINI_MODEL,
   },
 });
 

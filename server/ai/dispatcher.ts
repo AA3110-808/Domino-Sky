@@ -60,7 +60,7 @@ export async function analyzeWithAI(
   config: AIConfiguration,
 ): Promise<DispatcherResponse> {
   if (!config.apiKey || !config.apiUrl || !config.model) {
-    throw new Error("AI dispatcher is not configured. Set AI_API_KEY, AI_API_URL, and AI_MODEL on the backend.");
+    throw new Error("Gemini dispatcher is not configured. Set GEMINI_API_KEY and GEMINI_MODEL on the backend.");
   }
   const response = await fetch(config.apiUrl, {
     method: "POST",

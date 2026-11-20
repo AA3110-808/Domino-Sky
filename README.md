@@ -79,15 +79,17 @@ Recovery actions can be queued together, validated, removed individually, or cle
 
 Saved closure scenarios are stored in the current browser's local storage and can be compared through the API. CSV exports are generated from a fresh engine run. PDF exports and cross-user/server-side scenario persistence are not implemented.
 
-## Optional AI dispatcher
+## Optional Gemini dispatcher
 
-AI is disabled unless all of `AI_API_KEY`, `AI_API_URL`, and `AI_MODEL` are configured on the backend. Copy `.env.example` to `.env` and set values locally; never place an AI key in frontend code or commit `.env`. The adapter expects an OpenAI-compatible chat-completions endpoint with JSON response formatting.
+Gemini analysis is disabled unless `GEMINI_API_KEY` and `GEMINI_MODEL` are configured on the backend. If `.env` does not exist, create it from `.env.example`; if it already exists, add or update only those two entries and preserve its other values. The server uses Google's OpenAI-compatible chat-completions endpoint. Never place the API key in frontend code or commit `.env`.
 
-The AI receives scenario and simulation output, not user-entered personal data. Returned numeric claims are checked against the engine result, flight references must exist, and proposed actions are rerun through the deterministic engine before being labeled feasible. The AI does not calculate operational values. With no provider configuration, the rest of the application remains available and the dispatcher reports that it is not configured.
+The AI receives scenario and simulation output, not user-entered personal data. Returned numeric claims are checked against the engine result, flight references must exist, and proposed actions are rerun through the deterministic engine before being labeled feasible. The AI does not calculate operational values. Without Gemini configuration or when the provider is unavailable, the deterministic simulator remains usable.
+
+To test locally, set `GEMINI_API_KEY` and `GEMINI_MODEL` in your untracked `.env`, start the backend with `npm run dev:server` and the frontend with `npm run dev`, run a closure simulation, then select **Analyze current simulation** in the AI Dispatcher panel. `GET /api/health` reports Gemini configuration status without returning credentials.
 
 ## Remaining limitations
 
 - Crew replacement/assignment actions, diversions, airport slot allocation, and passenger-level reaccommodation are not modeled because the dataset lacks the required data and constraints.
 - Scenario comparison currently presents a comparison table, not charts.
 - CSV reporting is implemented; PDF reporting is not.
-- The AI integration is optional and requires a separately configured compatible provider.
+- The Gemini integration is optional and requires backend-only configuration.
